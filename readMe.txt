@@ -153,10 +153,3 @@ Using the **MoSCoW prioritization** framework:
 2. Deploy to Heroku or AWS.
 
 """
-
-file_path = "/mnt/data/Todo_App_Backend_Plan.txt"
-
-with open(file_path, "w") as file:
-    file.write(plan_content)
-
-file_path
