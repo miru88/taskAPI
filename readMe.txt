@@ -121,6 +121,9 @@ Using the **MoSCoW prioritization** framework:
 == Implementation
 == Implementation
 
+generic services are the most practical use of TypeScript generics in a NestJS project. 
+While conditional types and utility types like Partial<T> or Readonly<T> also have use cases, 
+generic services, repositories, DTOs, and guards are the core applications for generics in a real-world NestJS app.
 
 
 === Step 1: Project Setup
