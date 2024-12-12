@@ -1,0 +1,244 @@
+# Implementing JWT Authentication in NestJS
+
+This guide will help you implement a user authentication service in NestJS using the `passport-jwt` strategy.
+
+---
+
+## 1. **Install Dependencies**
+
+Install the required packages:
+```bash
+npm install @nestjs/passport passport passport-jwt bcrypt jsonwebtoken
+```
+
+---
+
+## 2. **User Entity or Model**
+Define a user model based on your database (TypeORM, Mongoose, Prisma, etc.). Here's an example using TypeORM:
+
+```typescript
+import { Entity, PrimaryGeneratedColumn, Column, BeforeInsert } from 'typeorm';
+import * as bcrypt from 'bcrypt';
+
+@Entity('users')
+export class User {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ unique: true })
+  username: string;
+
+  @Column()
+  password: string;
+
+  @BeforeInsert()
+  async hashPassword() {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
+}
+```
+
+---
+
+## 3. **Auth Module**
+Create an `AuthModule` to manage authentication services and controllers:
+
+```typescript
+import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { AuthService } from './auth.service';
+import { AuthController } from './auth.controller';
+import { JwtStrategy } from './jwt.strategy';
+import { UsersModule } from '../users/users.module';
+
+@Module({
+  imports: [
+    UsersModule,
+    PassportModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'your-secret-key',
+      signOptions: { expiresIn: '1h' },
+    }),
+  ],
+  providers: [AuthService, JwtStrategy],
+  controllers: [AuthController],
+})
+export class AuthModule {}
+```
+
+---
+
+## 4. **AuthService**
+
+Create a service to handle authentication logic:
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { UsersService } from '../users/users.service';
+import * as bcrypt from 'bcrypt';
+
+@Injectable()
+export class AuthService {
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService
+  ) {}
+
+  async validateUser(username: string, pass: string): Promise<any> {
+    const user = await this.usersService.findByUsername(username);
+    if (user && (await bcrypt.compare(pass, user.password))) {
+      const { password, ...result } = user;
+      return result;
+    }
+    return null;
+  }
+
+  async login(user: any) {
+    const payload = { username: user.username, sub: user.id };
+    return {
+      access_token: this.jwtService.sign(payload),
+    };
+  }
+}
+```
+
+---
+
+## 5. **JWT Strategy**
+
+Create a JWT strategy for validating tokens:
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { PassportStrategy } from '@nestjs/passport';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy) {
+  constructor() {
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: process.env.JWT_SECRET || 'your-secret-key',
+    });
+  }
+
+  async validate(payload: any) {
+    return { userId: payload.sub, username: payload.username };
+  }
+}
+```
+
+---
+
+## 6. **Guards**
+
+Create a guard to protect routes requiring authentication:
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+
+@Injectable()
+export class JwtAuthGuard extends AuthGuard('jwt') {}
+```
+
+---
+
+## 7. **Auth Controller**
+
+Create a controller to handle login requests:
+
+```typescript
+import { Controller, Post, Request, UseGuards } from '@nestjs/common';
+import { AuthService } from './auth.service';
+import { LocalAuthGuard } from './local-auth.guard';
+
+@Controller('auth')
+export class AuthController {
+  constructor(private readonly authService: AuthService) {}
+
+  @UseGuards(LocalAuthGuard)
+  @Post('login')
+  async login(@Request() req) {
+    return this.authService.login(req.user);
+  }
+}
+```
+
+---
+
+## 8. **Users Module**
+
+Ensure you have a `UsersModule` that provides methods like `findByUsername`:
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { User } from './user.entity';
+
+@Injectable()
+export class UsersService {
+  private readonly users: User[] = [
+    { id: 1, username: 'test', password: await bcrypt.hash('password', 10) },
+  ];
+
+  async findByUsername(username: string): Promise<User | undefined> {
+    return this.users.find(user => user.username === username);
+  }
+}
+```
+
+---
+
+## 9. **Protecting Routes**
+
+Use the `JwtAuthGuard` to protect routes:
+
+```typescript
+import { Controller, Get, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
+
+@Controller('profile')
+export class ProfileController {
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  getProfile(@Request() req) {
+    return req.user;
+  }
+}
+```
+
+---
+
+## 10. **Environment Variables**
+
+Store the JWT secret key in an `.env` file:
+
+```
+JWT_SECRET=your-very-secure-secret
+```
+
+Use `@nestjs/config` to load the environment variables.
+
+---
+
+## Directory Structure
+
+```
+src/
+  auth/
+    auth.module.ts
+    auth.service.ts
+    auth.controller.ts
+    jwt.strategy.ts
+    jwt-auth.guard.ts
+  users/
+    users.module.ts
+    users.service.ts
+    user.entity.ts
+```
+
+Follow these steps to implement JWT authentication in your NestJS application!
+

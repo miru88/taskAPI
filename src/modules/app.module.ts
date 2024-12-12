@@ -8,6 +8,9 @@ import { TaskController } from 'src/controllers/task.controller';
 import { TaskDataService } from 'src/services/task-data.service';
 import {TypeOrmModule} from '@nestjs/typeorm';
 import { Task, User } from 'src/entities/index';
+import { UserController } from 'src/controllers/user.controller';
+import { AuthController } from '../controllers/auth.controller';
+import { AuthModule } from './auth.module';
 
 @Module({
   imports: [
@@ -29,8 +32,9 @@ import { Task, User } from 'src/entities/index';
       }),
     }),
     TaskModule, // Register TaskModule
-    UserModule, ],
-  controllers: [AppController, TaskController],
+    UserModule,
+    AuthModule ],
+  controllers: [AppController, TaskController, UserController, AuthController],
   providers: [AppService],
 })
 export class AppModule {}

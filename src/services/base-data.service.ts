@@ -5,10 +5,11 @@ export class BaseDataService<T> {
 
     constructor(private readonly repository: Repository<T>){}
     
-    async findOne(id: number): Promise<T | null> {
-        return this.repository.findOne({
-          where: { id } as unknown as FindOptionsWhere<T>,//strange that I have to do this
-        });
+    async findOne(entity: FindOptionsWhere<T>): Promise<T | null> {
+      if (!entity || Object.keys(entity).length === 0) {
+        throw new Error('Selection conditions are required to find a single row.');
+      }
+        return this.repository.findOne({ where: entity });
       }
       
     //find all, change this to find all by a specific column
