@@ -4,7 +4,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthService } from '../services/auth.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-// import { JwtStrategy } from './jwt.strategy';
+import { LocalStrategy } from '../strategies/local.strategy';
+import { JwtStrategy } from '../strategies/jwt.strategy';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 
 @Global()
 @Module({
@@ -15,12 +18,20 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
             global: true,
             imports: [ConfigModule],
             useFactory: (configService: ConfigService) =>({
-                secret: configService.get('JWT_SECRET') || 'secret sauce',
+                secret: configService.get('JWT_SECRET'), // || 'secret sauce',
                 signOptions: {expiresIn: configService.get('JWT_EXPIRES_IN')}
             }),
             inject: [ConfigService]
         })],
-    providers: [AuthService],
+    providers: [
+        AuthService, 
+        LocalStrategy, 
+        JwtStrategy,  
+        {
+        provide: APP_GUARD,
+        useClass: JwtAuthGuard,
+      },
+    ],
     exports: [AuthService]
 
 })

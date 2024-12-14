@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, UseGuards } from '@nestjs/common';
 import { TaskDataService } from 'src/services/task-data.service';
 import { CreateTaskDto, UpdateTaskDto } from '../dtos/task.dto';
 import { Task } from '../entities/task.entity';
@@ -6,6 +6,7 @@ import { Task } from '../entities/task.entity';
 @Controller('task')
 export class TaskController {
     constructor(private readonly taskDataService: TaskDataService) {}
+
 
 @Get('/getAll/:userId')
 getAllTasks(@Param('userId') userId: number) {
