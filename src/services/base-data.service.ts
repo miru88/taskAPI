@@ -1,4 +1,4 @@
-import { Repository, DeepPartial, FindOptionsWhere} from "typeorm";
+import { Repository, DeepPartial, FindOptionsWhere, In} from "typeorm";
 
 
 export class BaseDataService<T> {
@@ -13,9 +13,14 @@ export class BaseDataService<T> {
       }
       
     //find all, change this to find all by a specific column
-    async findAllBy<K extends keyof T>(column: K, value: T[K]): Promise<T[]> {
+    async findAllBy<K extends keyof T>(column: K, value: T[K] | T[K][]): Promise<T[]> {
+      
+      const whereCondition: FindOptionsWhere<T> = Array.isArray(value)
+      ? ({ [column]: In(value) } as FindOptionsWhere<T>)
+      : ({ [column]: value } as FindOptionsWhere<T>);
+
         return this.repository.find({
-            where: { [column]: value } as FindOptionsWhere<T>,
+            where:  whereCondition,
           });
     }
 

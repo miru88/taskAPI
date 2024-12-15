@@ -52,7 +52,16 @@ ALTER TABLE IF EXISTS public.task
 
 
 
+CREATE TABLE "role" (
+  "id" SERIAL PRIMARY KEY,
+  "name" VARCHAR(100) NOT NULL UNIQUE CHECK ("name" ~ '^[A-Z0-9_]+$')
+);
 
+CREATE TABLE user_role(
+    "userId" INTEGER NOT NULL REFERENCES "user"(id),
+    "roleId" INTEGER NOT NULL REFERENCES "role"(id),
+    PRIMARY KEY ("userId", "roleId")
+);
 
 
 

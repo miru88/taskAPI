@@ -5,12 +5,15 @@ import { TaskModule } from './task.module';
 import { UserModule } from './user.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TaskController } from 'src/controllers/task.controller';
-import { TaskDataService } from 'src/services/task-data.service';
 import {TypeOrmModule} from '@nestjs/typeorm';
-import { Task, User } from 'src/entities/index';
+import { Task, User, Role, UserRole } from 'src/entities/index';
 import { UserController } from 'src/controllers/user.controller';
 import { AuthController } from '../controllers/auth.controller';
 import { AuthModule } from './auth.module';
+import { RoleModule } from './role.module';
+import { RoleController } from '../controllers/role.controller';
+import { UserRoleModule } from '../modules/user-role.module';
+import { UserRoleController } from 'src/controllers/user-role.controller';
 
 @Module({
   imports: [
@@ -27,14 +30,21 @@ import { AuthModule } from './auth.module';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME'),
-        entities: [Task, User],
-        synchronize: true, // Disable in production
+        entities: [Task, User, Role, UserRole],
+        synchronize: false, // Disable in production
       }),
     }),
-    TaskModule, // Register TaskModule
+    TaskModule,
     UserModule,
-    AuthModule ],
-  controllers: [AppController, TaskController, UserController, AuthController],
+    AuthModule,
+    RoleModule,
+    UserRoleModule ],
+  controllers: [AppController, 
+              TaskController, 
+              UserController, 
+              AuthController, 
+              RoleController, 
+              UserRoleController],
   providers: [AppService],
 })
 export class AppModule {}
