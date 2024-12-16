@@ -63,8 +63,11 @@ CREATE TABLE user_role(
     PRIMARY KEY ("userId", "roleId")
 );
 
+INSERT INTO "role" VALUES
+(1,'SUPER_ADMIN');
 
-
+INSERT INTO user_role VALUES
+(1,1);
 
 
 INSERT INTO task (title, description, status, "dueDate", "userId")
