@@ -155,4 +155,68 @@ generic services, repositories, DTOs, and guards are the core applications for g
 1. Containerize with Docker.
 2. Deploy to Heroku or AWS.
 
+
+
+
+
+2/4/2025 STUFF
+# Implementation Plan for Generic Query Service & Centralized Error Handling  
+
+## Phase 1: Generic Query Service (Pagination, Filtering, Sorting)  
+### Goal: Create a reusable query service that handles common database operations across entities.  
+
+### Step 1: Define the `GenericQueryService<T>`  
+- Create a new file: `services/GenericQueryService.ts`.  
+- Implement a class that supports **pagination, filtering, and sorting** dynamically.  
+
+### Step 2: Integrate the Query Service into TodoService  
+- Use `GenericQueryService<Todo>` inside `TodoService`.  
+- Refactor `getTodos` to use the new service instead of calling TypeORM directly.  
+
+### Step 3: Update the Controller  
+- Modify `TodoController` to extract query parameters (`page`, `pageSize`, `filters`, `orderBy`) from the request.  
+- Call `GenericQueryService<Todo>` instead of raw TypeORM queries.  
+
+### Step 4: Test with Different Query Parameters  
+- Send test API requests with different pagination and filter options to verify functionality.  
+
+---
+
+## Phase 2: Centralized Error Handling & Logging  
+### Goal: Ensure all API errors are handled consistently and logged properly.  
+
+### Step 1: Create a Custom Error Class (`ApiError`)  
+- Define a new `ApiError` class in `errors/ApiError.ts`.  
+- Support custom HTTP status codes and error messages.  
+
+### Step 2: Implement an Express Error Middleware  
+- Create `middlewares/errorHandler.ts`.  
+- Catch **database errors**, **validation errors**, and **unexpected errors**, then format responses consistently.  
+
+### Step 3: Update Controllers to Use `ApiError`  
+- Modify `TodoController` to use `ApiError` instead of raw `throw new Error()`.  
+- Example: Instead of `throw new Error("Not found")`, use `throw new ApiError(404, "Todo not found")`.  
+
+### Step 4: Implement Logging  
+- Use **Winston or Pino** to log all errors into a file.  
+- Ensure logs include **timestamp, request details, and error stack trace**.  
+
+---
+
+## Final Integration & Deployment  
+### Goal: Ensure the new system is fully functional and integrated into the existing API.  
+
+✅ Run unit tests to confirm pagination, filtering, and sorting return expected results.  
+✅ Test error responses using invalid input (e.g., missing required fields, database failures).  
+✅ Monitor API logs to ensure errors are properly recorded.  
+
+---
+
+## Next Steps  
+1. Extend the generic query service to support more complex filters (e.g., `LIKE`, range queries).  
+2. Improve logging with request tracing (attach `requestId` to logs).  
+3. Implement a global response wrapper to format all API responses uniformly.  
+
+
+
 """
